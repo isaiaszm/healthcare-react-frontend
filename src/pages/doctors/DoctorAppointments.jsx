@@ -10,6 +10,24 @@ export const DoctorAppointments = () => {
     fetchAppointments();
   }, []);
 
+  const fetchConsultations = async (appointment) => {
+    if (!appointment?.id) {
+      return false;
+    }
+
+    try {
+      const response = await apiService.getConsultationByAppointmentId(
+        appointment.id,
+      );
+
+      return response.data?.statusCode === 200;
+    } catch (error) {
+      setError("Failed to load consultations");
+      console.error("Error fetching consultations:", error);
+      return false;
+    }
+  };
+
   const fetchAppointments = async () => {
     try {
       const response = await apiService.getMyAppointments();
@@ -143,14 +161,25 @@ export const DoctorAppointments = () => {
                           </Link>
                         </>
                       )}
-                      {appointment.status === "COMPLETED" && (
+                      {appointment.status === "COMPLETED" &&
+                      fetchConsultations(appointment) ? (
                         <Link
-                          to={`/doctor/create-consultation?appointmentId=${appointment.id}`}
+                          to={`/doctor/patient-consultation-history?patientId=${appointment.patient.id}`}
                           className="btn btn-primary btn-sm"
                         >
-                          Create Consultation
+                          View Consultation
                         </Link>
+                      ) : (
+                        appointment.status === "COMPLETED" && (
+                          <Link
+                            to={`/doctor/create-consultation?appointmentId=${appointment.id}`}
+                            className="btn btn-primary btn-sm"
+                          >
+                            Create Consultation
+                          </Link>
+                        )
                       )}
+
                       {appointment.meetingLink &&
                         appointment.status === "SCHEDULED" && (
                           <a
